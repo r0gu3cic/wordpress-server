@@ -1,0 +1,15 @@
+---
+- hosts: "{{ hosts }}"  # Hosts will be passed dynamically from command line
+  remote_user: root
+
+  vars_files:
+    - host_vars/{{ hosts }}/vars.yml      # Common vars
+    - host_vars/{{ hosts }}/vault.yml     # Sensitive vars
+
+  roles:
+    # Setup
+    - initial_server_setup_role  # L (Initial server setup role)
+    - nginx_setup_role           # E (NGINX setup role)
+    - mysql_setup_role           # M (MySQL setup role)
+    - php_setup_role             # P (PHP setup role)
+    # Stack

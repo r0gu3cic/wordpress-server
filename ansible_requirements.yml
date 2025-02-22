@@ -1,0 +1,17 @@
+# Requirements file for creation of local Ansible Galaxy with necessary roles
+# Ansible will get specific version of roles from GitHub
+- name: initial_server_setup_role
+  src: https://github.com/r0gu3cic/initial-server-setup-role.git
+  version: develop
+
+- name: nginx_setup_role
+  src: https://github.com/r0gu3cic/nginx-setup-role.git
+  version: develop
+
+- name: mysql_setup_role
+  src: https://github.com/r0gu3cic/mysql-setup-role.git
+  version: develop
+
+- name: php_setup_role
+  src: https://github.com/r0gu3cic/php-setup-role.git
+  version: develop

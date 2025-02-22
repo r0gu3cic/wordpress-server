@@ -1,0 +1,9 @@
+---
+user:
+  name: enabler
+  sudo_password: "{{vault.user.sudo_password}}"
+  public_key: /home/stefan/.ssh/id_rsa.pub # The path on host from which playbooks are run
+journalctl_max_disk_usage: 1G
+mysql_root_password: "{{vault.mysql_root_password}}"
+php:
+  version: 8.1

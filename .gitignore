@@ -1,0 +1,13 @@
+# Ignore downloaded Ansible roles
+roles/
+
+# Ignore temporary and cache files
+*.retry
+*.log
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore Ansible configuration files that may contain sensitive data
+ansible.cfg
+inventory
