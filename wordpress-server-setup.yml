@@ -11,13 +11,11 @@
     - { role: initial_server_setup_role, tags: ["setup", "initial"] }
     
     # LEMP Stack setup
-    - { role: nginx_setup_role, tags: ["lemp", "nginx"] }
     - { role: mysql_setup_role, tags: ["lemp", "mysql"] }
     - { role: php_setup_role, tags: ["lemp", "php"] }
+    - { role: nginx_setup_role, tags: ["lemp", "nginx"] }
 
   tasks:
-    - name: Include handlers
-      include: handlers/main.yml
 
     # UFW configuration
     - name: Configure UFW

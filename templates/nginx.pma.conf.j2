@@ -3,6 +3,21 @@ server {
 	server_name {{ pma.subdomain }};
 	root {{ pma.file_path }};
 
+	# Hide nginx version
+	server_tokens off;
+
+	index index.php;
+	charset utf-8;
+
+	# Headers for enhanced security
+	add_header X-Frame-Options "SAMEORIGIN";
+	add_header X-XSS-Protection "1; mode=block";
+	add_header X-Content-Type-Options "nosniff";
+
+	# Logs location
+	access_log /var/log/nginx/{{pma.subdomain}}.access.log;
+	error_log /var/log//nginx/{{pma.subdomain}}.error.log warn;
+
 	location / {
 		auth_basic "PMA Login";
 		auth_basic_user_file {{ pma.basic_http_auth.file_path }};  # Credentials file for basic http auth

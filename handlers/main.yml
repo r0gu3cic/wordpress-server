@@ -6,8 +6,3 @@
 - name: enable ufw
   ufw:
     state: enabled
-
-- name: restart php-fpm
-  service:
-    name: "php{{php.version}}-fpm"
-    state: restarted

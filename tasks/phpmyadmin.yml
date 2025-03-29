@@ -1,77 +1,82 @@
-# ---
-# # TODO install pma on default place /var/www/phpmyadmin and and server from there
-# # make sure permissions are right 
-# - name: Ensure deployments directory exists
-#   file:
-#     path: "{{pma.file_path}}"
-#     state: directory
-#     owner: "www-data"
-#     group: "www-data"
-#     mode: "0755"
+---
+# TODO install pma on default place /var/www/phpmyadmin and and server from there
+# make sure permissions are right 
+- name: Ensure directory for phpMyAdmin exists
+  file:
+    path: "{{pma.file_path}}"
+    state: directory
+    owner: "www-data"
+    group: "www-data"
+    mode: "0755"
 
-# - name: Install phpMyAdmin using composer
-#   become: true
-#   become_user: "www-data"
-#   composer:
-#     command: create-project
-#     arguments: phpmyadmin/phpmyadmin
-#     working_dir: "{{pma.file_path}}" # Install phpMyAdmin here
-#   ignore_errors: true
+- name: Install phpMyAdmin using composer
+  become: true
+  become_user: "www-data"
+  composer:
+    command: create-project
+    arguments: phpmyadmin/phpmyadmin
+    working_dir: /var/www # Install phpMyAdmin here
+  ignore_errors: true
 # - name: Make sure that all files belongs to www-data user
-# # Disable root login for phpMyAdmin, create pma config file
-# - name: Disable root login on pma
-#   template:
-#     src: "templates/config.inc.php.j2"
-#     dest: "{{pma.file_path}}/config.inc.php"
-# # Create file for basic http auth for pma path
-# - name: Install pip for Python 3
-#   apt:
-#     name: python3-pip
-#     state: present
-#   become: true
-# - name: Install passlib for htpasswd module
-#   pip:
-#     name: passlib
-#     state: present
-# - name: Create file for basic http authentication for phpMyAdmin
-#   htpasswd:
-#     path: "{{pma.basic_http_auth.file_path}}"  # Create file with username and password
-#     name: "{{pma.basic_http_auth.username}}" # Use whichever user you want
-#     password: "{{pma.basic_http_auth.password}}"
 
-# # php-fpm pool for pma
-# - name: Create php-fpm pool for pma
-#   template:
-#     src: "templates/php.fpm.pma.pool.conf.j2"
-#     dest: "/etc/php/{{php.version}}/fpm/pool.d/{{pma.subdomain}}.conf" # .conf required at the end
-#   notify:
-#     - restart php-fpm
-# # There has to be at least one pool at all time, so I cant delete default pool before I create new one
-# - name: Delete default php-fpm pool 
-#   file:
-#     path: "/etc/php/{{php.version}}/fpm/pool.d/www.conf"
-#     state: absent
-#   notify: 
-#     - restart php-fpm
+# Disable root login for phpMyAdmin, create pma config file
+- name: Disable root login on pma
+  template:
+    src: "templates/config.inc.php.j2"
+    dest: "{{pma.file_path}}/config.inc.php"
+# Create file for basic http auth for pma path
+- name: Install pip for Python 3
+  apt:
+    name: python3-pip
+    state: present
+  become: true
+- name: Install passlib for htpasswd module
+  pip:
+    name: passlib
+    state: present
+- name: Create file for basic http authentication for phpMyAdmin
+  htpasswd:
+    path: "{{pma.basic_http_auth.file_path}}"  # Create file with username and password
+    name: "{{pma.basic_http_auth.username}}" # Use whichever user you want
+    password: "{{pma.basic_http_auth.password}}"
 
-# # Nginx configuration for phpMyAdmin
-# - name: Sets nginx conf file for pma domain "{{pma.subdomain}}"
-#   template:
-#     src: "templates/nginx.pma.conf.j2"
-#     dest: "/etc/nginx/sites-available/{{pma.subdomain}}"
-# - name: Enable new nginx pma site "{{pma.subdomain}}"
-#   file:
-#     src: "/etc/nginx/sites-available/{{pma.subdomain}}"
-#     dest: "/etc/nginx/sites-enabled/{{pma.subdomain}}"
-#     state: link
-# - name: Force reload nginx configuration
-#   service: 
-#     name: nginx 
-#     state: reloaded
-# # - name: Configure log rotation for pma logs # TODO check where the logs are by default and if it suits you
-# #   template:
-# #     src: "templates/pma.logrotate.conf.j2"
-# #     dest: "/etc/logrotate.d/{{pma.subdomain}}"
+# php fpm pool for pma
+- name: Create php fpm pool for pma
+  template:
+    src: "templates/php.fpm.pma.pool.conf.j2"
+    dest: "/etc/php/{{php.version}}/fpm/pool.d/{{pma.subdomain}}.conf" # .conf required at the end
+
+# There has to be at least one pool at all time, so I cant delete default pool before I create new one
+- name: Delete default php fpm pool 
+  file:
+    path: "/etc/php/{{php.version}}/fpm/pool.d/www.conf"
+    state: absent
+
+- name: Force restart php fpm service
+  service:
+    name: "php{{ php.version }}-fpm"
+    state: restarted
+
+# Nginx configuration for phpMyAdmin
+- name: Sets nginx conf file for pma domain "{{pma.subdomain}}"
+  template:
+    src: "templates/nginx.pma.conf.j2"
+    dest: "/etc/nginx/sites-available/{{pma.subdomain}}"
+- name: Enable new nginx pma site "{{pma.subdomain}}"
+  file:
+    src: "/etc/nginx/sites-available/{{pma.subdomain}}"
+    dest: "/etc/nginx/sites-enabled/{{pma.subdomain}}"
+    state: link
+- name: Force reload nginx configuration
+  service: 
+    name: nginx 
+    state: reloaded
+
+# Configuration for log rotation 
+- name: Configure log rotation for pma logs
+  template:
+    src: "templates/pma.logrotate.conf.j2"
+    dest: "/etc/logrotate.d/{{pma.subdomain}}"
 
 # # # Generate a Self Signed OpenSSL certificate
 # # # I had to make sure that community.crypto collection is installed
