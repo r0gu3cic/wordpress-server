@@ -1,0 +1,21 @@
+server {
+	listen 80;
+	server_name {{ pma.subdomain }};
+	root {{ pma.file_path }};
+
+	location / {
+		auth_basic "PMA Login";
+		auth_basic_user_file {{ pma.basic_http_auth.file_path }};  # Credentials file for basic http auth
+		
+		location ~ \.php$ {
+			include snippets/fastcgi-php.conf;
+			fastcgi_pass unix:/var/run/php/php{{ php.version }}-fpm-{{ pma.subdomain }}.sock;
+		}
+	}
+
+	{# 
+	location /.well-known/acme-challenge {
+		root {{ certbot.directory }};
+	}
+	#}
+}

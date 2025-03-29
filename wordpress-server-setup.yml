@@ -16,6 +16,9 @@
     - { role: php_setup_role, tags: ["lemp", "php"] }
 
   tasks:
+    - name: Include handlers
+      include: handlers/main.yml
+
     # UFW configuration
     - name: Configure UFW
       import_tasks: tasks/ufw.yml

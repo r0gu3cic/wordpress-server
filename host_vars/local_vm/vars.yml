@@ -7,3 +7,13 @@ journalctl_max_disk_usage: 1G
 mysql_root_password: "{{vault.mysql_root_password}}"
 php:
   version: 8.1
+pma:
+  file_path: "/var/www/phpmyadmin"
+  blowfish: "{{vault.pma_blowfish_secret}}"
+  basic_http_auth:
+    file_path: /etc/nginx/pma
+    username: enabler
+    password: "{{vault.pma_basic_auth_password}}"
+  subdomain: pma.edu
+# certbot:
+#   directory_path: /var/www/letsencrypt # TODO if used needs to be created

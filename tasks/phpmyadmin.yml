@@ -1,1 +1,122 @@
----
+# ---
+# # TODO install pma on default place /var/www/phpmyadmin and and server from there
+# # make sure permissions are right 
+# - name: Ensure deployments directory exists
+#   file:
+#     path: "{{pma.file_path}}"
+#     state: directory
+#     owner: "www-data"
+#     group: "www-data"
+#     mode: "0755"
+
+# - name: Install phpMyAdmin using composer
+#   become: true
+#   become_user: "www-data"
+#   composer:
+#     command: create-project
+#     arguments: phpmyadmin/phpmyadmin
+#     working_dir: "{{pma.file_path}}" # Install phpMyAdmin here
+#   ignore_errors: true
+# - name: Make sure that all files belongs to www-data user
+# # Disable root login for phpMyAdmin, create pma config file
+# - name: Disable root login on pma
+#   template:
+#     src: "templates/config.inc.php.j2"
+#     dest: "{{pma.file_path}}/config.inc.php"
+# # Create file for basic http auth for pma path
+# - name: Install pip for Python 3
+#   apt:
+#     name: python3-pip
+#     state: present
+#   become: true
+# - name: Install passlib for htpasswd module
+#   pip:
+#     name: passlib
+#     state: present
+# - name: Create file for basic http authentication for phpMyAdmin
+#   htpasswd:
+#     path: "{{pma.basic_http_auth.file_path}}"  # Create file with username and password
+#     name: "{{pma.basic_http_auth.username}}" # Use whichever user you want
+#     password: "{{pma.basic_http_auth.password}}"
+
+# # php-fpm pool for pma
+# - name: Create php-fpm pool for pma
+#   template:
+#     src: "templates/php.fpm.pma.pool.conf.j2"
+#     dest: "/etc/php/{{php.version}}/fpm/pool.d/{{pma.subdomain}}.conf" # .conf required at the end
+#   notify:
+#     - restart php-fpm
+# # There has to be at least one pool at all time, so I cant delete default pool before I create new one
+# - name: Delete default php-fpm pool 
+#   file:
+#     path: "/etc/php/{{php.version}}/fpm/pool.d/www.conf"
+#     state: absent
+#   notify: 
+#     - restart php-fpm
+
+# # Nginx configuration for phpMyAdmin
+# - name: Sets nginx conf file for pma domain "{{pma.subdomain}}"
+#   template:
+#     src: "templates/nginx.pma.conf.j2"
+#     dest: "/etc/nginx/sites-available/{{pma.subdomain}}"
+# - name: Enable new nginx pma site "{{pma.subdomain}}"
+#   file:
+#     src: "/etc/nginx/sites-available/{{pma.subdomain}}"
+#     dest: "/etc/nginx/sites-enabled/{{pma.subdomain}}"
+#     state: link
+# - name: Force reload nginx configuration
+#   service: 
+#     name: nginx 
+#     state: reloaded
+# # - name: Configure log rotation for pma logs # TODO check where the logs are by default and if it suits you
+# #   template:
+# #     src: "templates/pma.logrotate.conf.j2"
+# #     dest: "/etc/logrotate.d/{{pma.subdomain}}"
+
+# # # Generate a Self Signed OpenSSL certificate
+# # # I had to make sure that community.crypto collection is installed
+# # # ansible-galaxy collection install community.crypto
+# # # ansible-galaxy collection list
+# # - name: Create a private key (RSA, 4096 bits) for signing a certificate
+# #   community.crypto.openssl_privatekey:
+# #     path: /etc/ssl/private/selfsigned-{{pma.subdomain}}.key
+# #   register: selfsigned_key_result
+# #   when: env_name == "local"
+# # - name: Create simple self-signed certificate that lasts ~10 years
+# #   community.crypto.x509_certificate:
+# #     path: /etc/ssl/certs/selfsigned-{{pma.subdomain}}.crt
+# #     privatekey_path: /etc/ssl/private/selfsigned-{{pma.subdomain}}.key
+# #     provider: selfsigned
+# #   register: selfsigned_cert_result
+# #   when: (selfsigned_key_result is succeeded) and (env_name == "local")
+# # # # It takes ~10 minutes to generate this
+# # # - name: Generate Diffie-Hellman parameters with the default size (4096 bits)
+# # #   openssl_dhparam:
+# # #     path: /etc/ssl/dhparams.pem #these are parameters and it could be reused for multiple sites
+# # - name: Sets nginx conf file for "{{env_name}}" environment PMA subdomain "{{pma.subdomain}}" that will use generated SSL cert
+# #   template:
+# #     src: "templates/nginx.local.https.pma.conf.j2"
+# #     dest: "/etc/nginx/sites-available/{{pma.subdomain}}"
+# #   when: (selfsigned_cert_result is succeeded) and (env_name == "local") #check if previous task was successful
+
+# # # Get SSL
+# # # Check if you can get a SSL cert
+# # - name: Check if you can obtain SSL using certbot for pma domain "{{pma.subdomain}}"
+# #   become: true
+# #   shell: certbot certonly --webroot -w {{certbot_dir}} --cert-name {{pma.subdomain}} -d {{pma.subdomain}} --non-interactive --agree-tos -m {{admin_email_address}} --dry-run
+# #   register: certbot_dryrun_result #register result of this task
+# #   when: env_name != "local"
+# # # Get SSL cert, SSL cert will be saved as defined --cert-name
+# # - name: Obtain SSL using certbot for pma domain "{{pma.subdomain}}"
+# #   become: true
+# #   shell: certbot certonly --webroot -w {{certbot_dir}} --cert-name {{pma.subdomain}} -d {{pma.subdomain}} --non-interactive --agree-tos -m {{admin_email_address}}
+# #   when: (certbot_dryrun_result is succeeded) and (env_name != "local") #check if previous task was successful
+# #   register: certbot_result #register result of this task
+# # # New nginx configuration
+# # - name: Sets new nginx conf file for pma domain "{{pma.subdomain}}" that will use obtained SSL cert
+# #   template:
+# #     src: "templates/nginx.https.pma.conf.j2"
+# #     dest: "/etc/nginx/sites-available/{{pma.subdomain}}"
+# #   when: (certbot_result is succeeded) and (env_name != "local") #check if previous task was successful
+# # - name: Force reload nginx configuration
+# #   service: name=nginx state=reloaded
