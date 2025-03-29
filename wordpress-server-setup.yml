@@ -6,13 +6,6 @@
     - host_vars/{{ hosts }}/vars.yml      # Common vars
     - host_vars/{{ hosts }}/vault.yml     # Sensitive vars
 
-  # roles:
-  #   # Setup
-  #   - initial_server_setup_role  # L (Initial server setup role)
-  #   - nginx_setup_role           # E (NGINX setup role)
-  #   - mysql_setup_role           # M (MySQL setup role)
-  #   - php_setup_role             # P (PHP setup role)
-  #   # Stack
   roles:
     # Initial server setup
     - { role: initial_server_setup_role, tags: ["setup", "initial"] }
@@ -23,14 +16,17 @@
     - { role: php_setup_role, tags: ["lemp", "php"] }
 
   tasks:
+    # UFW configuration
     - name: Configure UFW
       import_tasks: tasks/ufw.yml
       tags: ["setup", "ufw"]
     
+    # phpMyAdmin configuration
     - name: Install and configure phpMyAdmin
       import_tasks: tasks/phpmyadmin.yml
       tags: ["services", "phpmyadmin"]
     
+    # WordPress setup and configuration
     - name: Install and configure WordPress
       import_tasks: tasks/wordpress.yml
       tags: ["services", "wordpress"]

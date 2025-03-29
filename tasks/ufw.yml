@@ -1,1 +1,24 @@
 ---
+- name: UFW - Allow SSH on port 22
+  ufw:
+    rule: allow
+    port: '22'
+  notify:
+    - reload ufw
+    - enable ufw
+
+- name: UFW - Allow HTTP on port 80
+  ufw:
+    rule: allow
+    port: '80'
+  notify:
+    - reload ufw
+    - enable ufw
+
+- name: UFW - Allow HTTPS on port 443
+  ufw:
+    rule: allow
+    port: '443'
+  notify:
+    - reload ufw
+    - enable ufw
