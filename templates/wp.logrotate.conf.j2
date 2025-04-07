@@ -1,0 +1,44 @@
+/var/log/php-fpm-{{wp.subdomain}}.log {
+        rotate 5
+        size 1M
+        missingok
+        compress
+        delaycompress
+        postrotate
+                if [ -x /usr/lib/php/php{{php.version}}-fpm-reopenlogs ]; then
+                        /usr/lib/php/php{{php.version}}-fpm-reopenlogs;
+                fi
+        endscript
+}
+/var/log/nginx/{{wp.subdomain}}.access.log {
+        rotate 5
+        size 1M
+        missingok
+        compress
+        delaycompress
+        sharedscripts
+        prerotate
+                if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                        run-parts /etc/logrotate.d/httpd-prerotate; \
+                fi \
+        endscript
+        postrotate
+                invoke-rc.d nginx rotate >/dev/null 2>&1
+        endscript
+}
+/var/log//nginx/{{wp.subdomain}}.error.log {
+        rotate 5
+        size 1M
+        missingok
+        compress
+        delaycompress
+        sharedscripts
+        prerotate
+                if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                        run-parts /etc/logrotate.d/httpd-prerotate; \
+                fi \
+        endscript
+        postrotate
+                invoke-rc.d nginx rotate >/dev/null 2>&1
+        endscript
+}

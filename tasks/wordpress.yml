@@ -1,1 +1,79 @@
 ---
+# php fpm pool for WordPress site
+- name: WP - Create php fpm pool for WordPress
+  template:
+    src: "templates/php.fpm.wp.pool.conf.j2"
+    dest: "/etc/php/{{php.version}}/fpm/pool.d/{{wp.subdomain}}.conf" # .conf required at the end
+
+# MySQL database for WordPress site
+- name: WP - Creates database for WordPress
+  mysql_db:
+    name: "{{mysql.db}}"
+    state: present
+    login_user: root
+    login_password: "{{mysql_root_password}}"
+- name: WP - Create MySQL user for WordPress
+  mysql_user:
+    name: "{{mysql.user}}"
+    password: "{{mysql.password}}"
+    priv: "{{mysql.db}}.*:ALL"
+    state: present
+    login_user: root
+    login_password: "{{mysql_root_password}}"
+
+# WordPress installation and configuration
+- name: WP - Creates directory for WordPress site
+  file:
+    path: /var/www/{{wp.site_directory}}
+    state: directory
+    owner: "www-data"
+    group: "www-data"
+    mode: "0755"
+- name: WP - Download and unpack latest WordPress
+  become: true
+  become_user: "www-data"
+  unarchive:
+    src: https://wordpress.org/latest.tar.gz
+    dest: "/var/www/{{wp.site_directory}}"
+    remote_src: yes
+    creates: "/var/www/{{wp.site_directory}}/wordpress"
+- name: WP - Set up wp-config
+  become: true
+  become_user: "www-data"
+  template:
+    src: "templates/wp-config.php.j2"
+    dest: "/var/www/{{wp.site_directory}}/wordpress/wp-config.php"
+    mode: "0644"
+- name: WP - Download wp-cli.phar
+  get_url:
+    url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    dest: /usr/local/bin/wp-cli.phar
+    mode: "0755"
+- name: WP - Move wp-cli.phar to /usr/local/bin/wp
+  shell: mv /usr/local/bin/wp-cli.phar /usr/local/bin/wp
+- name: WP - Ensure wp-cli is executable
+  file:
+    path: /usr/local/bin/wp
+    mode: "0755"
+    state: file
+
+# Nginx configuration for WordPress
+- name: WP - Sets nginx conf file for WordPress domain "{{wp.subdomain}}"
+  template:
+    src: "templates/nginx.wp.conf.j2"
+    dest: "/etc/nginx/sites-available/{{wp.subdomain}}"
+- name: WP - Enable new nginx WordPress site "{{wp.subdomain}}"
+  file:
+    src: "/etc/nginx/sites-available/{{wp.subdomain}}"
+    dest: "/etc/nginx/sites-enabled/{{wp.subdomain}}"
+    state: link
+- name: WP - Force reload nginx configuration
+  service: 
+    name: nginx 
+    state: reloaded
+
+# Configuration for log rotation 
+- name: WP - Configure log rotation for wp logs
+  template:
+    src: "templates/wp.logrotate.conf.j2"
+    dest: "/etc/logrotate.d/{{wp.subdomain}}"

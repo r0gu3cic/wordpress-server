@@ -44,13 +44,11 @@
   template:
     src: "templates/php.fpm.pma.pool.conf.j2"
     dest: "/etc/php/{{php.version}}/fpm/pool.d/{{pma.subdomain}}.conf" # .conf required at the end
-
 # There has to be at least one pool at all time, so I cant delete default pool before I create new one
 - name: PMA - Delete default php fpm pool 
   file:
     path: "/etc/php/{{php.version}}/fpm/pool.d/www.conf"
     state: absent
-
 - name: PMA - Force restart php fpm service
   service:
     name: "php{{php.version}}-fpm"

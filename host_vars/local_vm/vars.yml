@@ -5,6 +5,10 @@ user:
   public_key: /home/stefan/.ssh/id_rsa.pub # The path on host from which playbooks are run
 journalctl_max_disk_usage: 1G
 mysql_root_password: "{{vault.mysql_root_password}}"
+mysql: 
+  user: enabler
+  password: "{{vault.mysql_user_password}}"
+  db: site
 php:
   version: 8.1
 pma:
@@ -15,5 +19,8 @@ pma:
     username: enabler
     password: "{{vault.pma_basic_auth_password}}"
   subdomain: pma.edu
+wp:
+  site_directory: site
+  subdomain: wp.edu
 # certbot:
 #   directory_path: /var/www/letsencrypt # TODO if used needs to be created
